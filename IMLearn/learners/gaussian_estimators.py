@@ -14,7 +14,7 @@ class UnivariateGaussian:
         Parameters
         ----------
         biased_var : bool, default=True
-            Should fitted estimator of variance be a biased or unbiased estimator
+            Should fit estimator of variance be a biased or unbiased estimator
 
         Attributes
         ----------
