@@ -39,6 +39,9 @@ def test_univariate_gaussian():
                                yaxis_title=r"$\text{Density}$",
                                height=300)).show()
 
+    # Temp test
+    #print(UnivariateGaussian.log_likelihood(10, 1, samples))
+
 
 def test_multivariate_gaussian():
     # Question 4 - Draw samples and print fitted model

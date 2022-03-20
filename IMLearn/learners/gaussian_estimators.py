@@ -107,7 +107,10 @@ class UnivariateGaussian:
         log_likelihood: float
             log-likelihood calculated
         """
-        raise NotImplementedError()
+        x_size = X.shape[0]
+        coefficient = (x_size/2) * np.log(2 * np.pi * sigma)
+        exp = (1 / (2 * sigma)) * (np.sum((X - mu) ** 2))
+        return -(coefficient + exp)
 
 
 class MultivariateGaussian:
