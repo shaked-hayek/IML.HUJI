@@ -59,7 +59,7 @@ def test_multivariate_gaussian():
             results[(f1, f3)] = lh
             row.append(lh)
         matrix.append(row)
-    px.imshow(matrix, x=ms, y=ms, labels={"x": "f1", "y": "f3"},
+    px.imshow(matrix, x=ms, y=ms, labels={"x": "f3", "y": "f1"},
               title="Heatmap of log likelihood").show()
 
     # Question 6 - Maximum likelihood
