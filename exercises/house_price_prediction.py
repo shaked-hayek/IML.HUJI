@@ -90,7 +90,7 @@ if __name__ == '__main__':
     X, y = load_data(DATASET_FILE)
 
     # Question 2 - Feature evaluation with respect to response
-    feature_evaluation(X, y, "plots")
+    #feature_evaluation(X, y, "plots")
 
     # Question 3 - Split samples into training- and testing sets.
     train_X, train_y, test_X, test_y = split_train_test(X, y)
@@ -102,4 +102,35 @@ if __name__ == '__main__':
     #   3) Test fitted model over test set
     #   4) Store average and variance of loss over test set
     # Then plot average loss as function of training size with error ribbon of size (mean-2*std, mean+2*std)
-    #raise NotImplementedError()
+    percents = np.linspace(10, 100, num=91)
+    train_X[LABEL_NAME] = train_y
+    mean_losses = []
+    std_loss_up = []
+    std_loss_down = []
+    for per in percents:
+        p_loss = np.array([])
+        for i in range(10):
+            sample_data = train_X.sample(frac=(per/100))
+            sample_y = sample_data[LABEL_NAME]
+            sample_X = sample_data.drop(columns=[LABEL_NAME])
+
+            model = LinearRegression()
+            model.fit(sample_X.to_numpy(), sample_y)
+            p_loss = np.append(p_loss, model.loss(test_X.to_numpy(), test_y.to_numpy()))
+        mean_loss = p_loss.mean()
+        std_loss = np.std(p_loss)
+        mean_losses.append(mean_loss)
+        std_loss_up.append(mean_loss + (2 * std_loss))
+        std_loss_down.append(mean_loss - (2 * std_loss))
+
+    go.Figure([go.Scatter(x=percents, y=mean_losses, mode='markers+lines'),
+               go.Scatter(x=percents, y=std_loss_up, fill=None, mode="lines", line=dict(color="lightgrey"),
+                          showlegend=False),
+               go.Scatter(x=percents, y=std_loss_down, fill='tonexty', mode="lines", line=dict(color="lightgrey"),
+                          showlegend=False)
+               ],
+              layout=go.Layout(title=r"$\text{Linear regression model over percentages of the training set - "
+                                     r"Mean Loss calculation}$",
+                               xaxis={"title": "Percent of training set"},
+                               yaxis={"title": "Mean Loss"})).show()
+
