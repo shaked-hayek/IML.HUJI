@@ -1,6 +1,8 @@
 from typing import Tuple
 import numpy as np
 import pandas as pd
+import math
+import random
 
 
 def split_train_test(X: pd.DataFrame, y: pd.Series, train_proportion: float = .75) \
@@ -33,7 +35,16 @@ def split_train_test(X: pd.DataFrame, y: pd.Series, train_proportion: float = .7
         Responses of test samples
 
     """
-    raise NotImplementedError()
+    n_samples = X.shape[0]
+    train_samples_n = math.ceil(train_proportion * n_samples)
+    train_index = random.choices(range(n_samples), k=train_samples_n)
+    test_index = list(set(range(n_samples)) - set(train_index))
+
+    train_X = X.drop(index=test_index)
+    train_y = y.drop(index=test_index)
+    test_X = X.drop(index=train_index)
+    test_y = y.drop(index=train_index)
+    return train_X, train_y, test_X, test_y
 
 
 def confusion_matrix(a: np.ndarray, b: np.ndarray) -> np.ndarray:
