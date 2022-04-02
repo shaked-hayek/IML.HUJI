@@ -2,7 +2,6 @@ from typing import Tuple
 import numpy as np
 import pandas as pd
 import math
-import random
 
 
 def split_train_test(X: pd.DataFrame, y: pd.Series, train_proportion: float = .75) \
@@ -35,10 +34,11 @@ def split_train_test(X: pd.DataFrame, y: pd.Series, train_proportion: float = .7
         Responses of test samples
 
     """
+    all_index = list(X.index.values)
     n_samples = X.shape[0]
     train_samples_n = math.ceil(train_proportion * n_samples)
-    train_index = random.choices(range(n_samples), k=train_samples_n)
-    test_index = list(set(range(n_samples)) - set(train_index))
+    train_index = np.random.choice(all_index, size=train_samples_n, replace=False)
+    test_index = list(set(all_index) - set(train_index))
 
     train_X = X.drop(index=test_index)
     train_y = y.drop(index=test_index)

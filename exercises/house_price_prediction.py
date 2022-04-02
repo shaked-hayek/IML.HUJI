@@ -1,5 +1,5 @@
-#from IMLearn.utils import split_train_test
-#from IMLearn.learners.regressors import LinearRegression
+from IMLearn.utils import split_train_test
+from IMLearn.learners.regressors import LinearRegression
 
 from os import path
 from typing import NoReturn
@@ -93,7 +93,7 @@ if __name__ == '__main__':
     feature_evaluation(X, y, "plots")
 
     # Question 3 - Split samples into training- and testing sets.
-    #raise NotImplementedError()
+    train_X, train_y, test_X, test_y = split_train_test(X, y)
 
     # Question 4 - Fit model over increasing percentages of the overall training data
     # For every percentage p in 10%, 11%, ..., 100%, repeat the following 10 times:
