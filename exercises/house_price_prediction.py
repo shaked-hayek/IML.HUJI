@@ -38,8 +38,8 @@ def load_data(filename: str):
     df = pd.read_csv(filename)
     df.fillna(0, inplace=True)
 
-    # Remove rows with id = 0 & negative prices
-    df.drop(df[(df.id == 0) | (df.price <= 0)].index, inplace=True)
+    # Remove rows with id = 0 & negative prices & more than 15 bedrooms
+    df.drop(df[(df.id == 0) | (df.price <= 0) | (df.bedrooms > 15)].index, inplace=True)
 
     # Change yr_renovated
     df = df.apply(replace_yr_renovated, axis=1)
@@ -68,9 +68,14 @@ def feature_evaluation(X: pd.DataFrame, y: pd.Series, output_path: str = ".") ->
     output_path: str (default ".")
         Path to folder in which plots are saved
     """
+    std_y = np.std(y)
     for col in X.columns:
         cov = np.cov(X[col], y)[0][1]
-        pearson_correlation = cov / (np.std(X[col]) * np.std(y))
+        std_x = np.std(X[col])
+        if std_x == 0:
+            pearson_correlation = 0
+        else:
+            pearson_correlation = cov / (np.std(X[col]) * std_y)
 
         with open(path.join(output_path, "pcorr_{0}.png".format(X[col].name)), "wb") as f:
             img_data = pio.to_image(go.Figure([go.Scatter(x=X[col], y=y, mode='markers')],
@@ -90,7 +95,7 @@ if __name__ == '__main__':
     X, y = load_data(DATASET_FILE)
 
     # Question 2 - Feature evaluation with respect to response
-    #feature_evaluation(X, y, "plots")
+    feature_evaluation(X, y, "plots")
 
     # Question 3 - Split samples into training- and testing sets.
     train_X, train_y, test_X, test_y = split_train_test(X, y)
@@ -103,6 +108,7 @@ if __name__ == '__main__':
     #   4) Store average and variance of loss over test set
     # Then plot average loss as function of training size with error ribbon of size (mean-2*std, mean+2*std)
     percents = np.linspace(10, 100, num=91)
+    model = LinearRegression()
     train_X[LABEL_NAME] = train_y
     mean_losses = []
     std_loss_up = []
@@ -114,7 +120,6 @@ if __name__ == '__main__':
             sample_y = sample_data[LABEL_NAME]
             sample_X = sample_data.drop(columns=[LABEL_NAME])
 
-            model = LinearRegression()
             model.fit(sample_X.to_numpy(), sample_y)
             p_loss = np.append(p_loss, model.loss(test_X.to_numpy(), test_y.to_numpy()))
         mean_loss = p_loss.mean()
@@ -123,7 +128,7 @@ if __name__ == '__main__':
         std_loss_up.append(mean_loss + (2 * std_loss))
         std_loss_down.append(mean_loss - (2 * std_loss))
 
-    go.Figure([go.Scatter(x=percents, y=mean_losses, mode='markers+lines'),
+    go.Figure([go.Scatter(name="MSE Loss", x=percents, y=mean_losses, mode='markers+lines'),
                go.Scatter(x=percents, y=std_loss_up, fill=None, mode="lines", line=dict(color="lightgrey"),
                           showlegend=False),
                go.Scatter(x=percents, y=std_loss_down, fill='tonexty', mode="lines", line=dict(color="lightgrey"),
