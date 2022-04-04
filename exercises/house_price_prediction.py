@@ -1,5 +1,6 @@
 from IMLearn.utils import split_train_test
 from IMLearn.learners.regressors import LinearRegression
+from IMLearn.metrics.loss_functions import mean_square_error
 
 from os import path
 from typing import NoReturn
@@ -146,4 +147,10 @@ if __name__ == '__main__':
     #   4) Store average and variance of loss over test set
     # Then plot average loss as function of training size with error ribbon of size (mean-2*std, mean+2*std)
     fit_model_over_percentages()
+
+    # Quiz question
+    y_true = np.array([279000, 432000, 326000, 333000, 437400, 555950])
+    y_pred = np.array(
+        [199000.37562541, 452589.25533196, 345267.48129011, 345856.57131275, 563867.1347574, 395102.94362135])
+    print(mean_square_error(y_true, y_pred))
 
