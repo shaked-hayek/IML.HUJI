@@ -76,7 +76,7 @@ if __name__ == '__main__':
            title="Loss for each value of k (degree)").show()
 
     # Question 5 - Evaluating fitted model on different countries
-    k_chosen = 5
+    k_chosen = 4
     model = PolynomialFitting(k_chosen)
     model.fit(df_israel[DAY_OF_YEAR], df_israel[TEMP])
     countries = df.Country.unique()
