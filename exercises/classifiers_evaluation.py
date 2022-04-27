@@ -1,4 +1,7 @@
+import pandas as pd
+
 from IMLearn.learners.classifiers import Perceptron, LDA, GaussianNaiveBayes
+from IMLearn.metrics import accuracy
 from typing import Tuple
 from utils import *
 import plotly.graph_objects as go
@@ -83,7 +86,7 @@ def get_ellipse(mu: np.ndarray, cov: np.ndarray):
     xs = (l1 * np.cos(theta) * np.cos(t)) - (l2 * np.sin(theta) * np.sin(t))
     ys = (l1 * np.sin(theta) * np.cos(t)) + (l2 * np.cos(theta) * np.sin(t))
 
-    return go.Scatter(x=mu[0] + xs, y=mu[1] + ys, mode="lines", marker_color="black")
+    return go.Scatter(x=mu[0] + xs, y=mu[1] + ys, mode="lines", marker_color="black", showlegend=False)
 
 
 def compare_gaussian_classifiers():
@@ -93,30 +96,45 @@ def compare_gaussian_classifiers():
     """
     for f in ["gaussian1.npy", "gaussian2.npy"]:
         # Load dataset
-        raise NotImplementedError()
+        X, y = load_dataset(f)
 
         # Fit models and predict over training set
-        raise NotImplementedError()
+        lda = LDA()
+        lda.fit(X, y)
+        lda_predicted_y = lda.predict(X)
 
         # Plot a figure with two suplots, showing the Gaussian Naive Bayes
         # predictions on the left and LDA predictions
         # on the right. Plot title should specify dataset used and subplot
         # titles should specify algorithm and accuracy
         # Create subplots
-        from IMLearn.metrics import accuracy
-        raise NotImplementedError()
+        lda_accuracy = accuracy(y, lda_predicted_y)
+        gaussian_accuracy = 0  # TODO
+
+        symbols = np.array(["circle", "x", "diamond"])
+        fig = make_subplots(cols=2, subplot_titles=[
+            "Gaussian Naive Bayes predictions - accuracy = {0}".format(gaussian_accuracy),
+            "LDA predictions - accuracy = {0}".format(lda_accuracy)
+        ])
 
         # Add traces for data-points setting symbols and colors
-        raise NotImplementedError()
+        fig.add_trace(go.Scatter(x=X[:, 0], y=X[:, 1], mode="markers", showlegend=False,
+                                 marker=dict(color=lda_predicted_y.astype(int),
+                                             symbol=symbols[y.astype(int)])), row=1, col=2)
 
         # Add `X` dots specifying fitted Gaussians' means
-        raise NotImplementedError()
+        fig.add_trace(go.Scatter(x=lda.mu_[:, 0], y=lda.mu_[:, 1], mode="markers", showlegend=False,
+                                 marker=dict(size=8, color="grey", symbol="x")), row=1, col=2)
 
         # Add ellipses depicting the covariances of the fitted Gaussians
-        raise NotImplementedError()
+        for i in range(len(lda.mu_)):
+            fig.add_trace(get_ellipse(lda.mu_[i], lda.cov_), row=1, col=2)
+
+        fig.update_layout(title_text="Subplots using {0} dataset".format(f))
+        fig.show()
 
 
 if __name__ == '__main__':
     np.random.seed(0)
     run_perceptron()
-    #compare_gaussian_classifiers()
+    compare_gaussian_classifiers()
