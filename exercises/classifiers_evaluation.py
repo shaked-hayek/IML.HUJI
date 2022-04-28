@@ -1,5 +1,3 @@
-import pandas as pd
-
 from IMLearn.learners.classifiers import Perceptron, LDA, GaussianNaiveBayes
 from IMLearn.metrics import accuracy
 from typing import Tuple
@@ -150,8 +148,7 @@ def quiz():
     y = np.array([0, 0, 1, 1, 1, 1, 2, 2])
 
     gaussian_nb = GaussianNaiveBayes()
-    gaussian_nb.fit(X, y)
-    gnb_predicted_y = gaussian_nb.predict(X)
+    gaussian_nb.fit(X, y).predict(X)
     print("{0:.2}".format(gaussian_nb.pi_[0]))
     print("{0:.2}".format(gaussian_nb.mu_[1][0]))
 
@@ -160,8 +157,7 @@ def quiz():
     y = np.array([0, 0, 1, 1, 1, 1])
 
     gaussian_nb = GaussianNaiveBayes()
-    gaussian_nb.fit(X, y)
-    gnb_predicted_y = gaussian_nb.predict(X)
+    gaussian_nb.fit(X, y).predict(X)
     print("{0:.2}".format(gaussian_nb.vars_[1][0]))
     print("{0:.2}".format(gaussian_nb.vars_[1][1]))
 
