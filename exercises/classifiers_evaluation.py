@@ -103,32 +103,42 @@ def compare_gaussian_classifiers():
         lda.fit(X, y)
         lda_predicted_y = lda.predict(X)
 
+        gaussian_nb = GaussianNaiveBayes()
+        gaussian_nb.fit(X, y)
+        gnb_predicted_y = gaussian_nb.predict(X)
+
         # Plot a figure with two suplots, showing the Gaussian Naive Bayes
         # predictions on the left and LDA predictions
         # on the right. Plot title should specify dataset used and subplot
         # titles should specify algorithm and accuracy
         # Create subplots
         lda_accuracy = accuracy(y, lda_predicted_y)
-        gaussian_accuracy = 0  # TODO
+        gaussian_accuracy = accuracy(y, gnb_predicted_y)
 
-        symbols = np.array(["circle", "x", "diamond"])
+        symbols = np.array(["circle", "cross", "diamond"])
         fig = make_subplots(cols=2, subplot_titles=[
-            "Gaussian Naive Bayes predictions - accuracy = {0}".format(gaussian_accuracy),
-            "LDA predictions - accuracy = {0}".format(lda_accuracy)
+            "Gaussian Naive Bayes - accuracy = {0:.3}".format(gaussian_accuracy),
+            "LDA - accuracy = {0:.3}".format(lda_accuracy)
         ])
 
         # Add traces for data-points setting symbols and colors
         fig.add_trace(go.Scatter(x=X[:, 0], y=X[:, 1], mode="markers", showlegend=False,
                                  marker=dict(color=lda_predicted_y.astype(int),
                                              symbol=symbols[y.astype(int)])), row=1, col=2)
+        fig.add_trace(go.Scatter(x=X[:, 0], y=X[:, 1], mode="markers", showlegend=False,
+                                 marker=dict(color=gnb_predicted_y.astype(int),
+                                             symbol=symbols[y.astype(int)])), row=1, col=1)
 
         # Add `X` dots specifying fitted Gaussians' means
         fig.add_trace(go.Scatter(x=lda.mu_[:, 0], y=lda.mu_[:, 1], mode="markers", showlegend=False,
                                  marker=dict(size=8, color="grey", symbol="x")), row=1, col=2)
+        fig.add_trace(go.Scatter(x=gaussian_nb.mu_[:, 0], y=gaussian_nb.mu_[:, 1], mode="markers", showlegend=False,
+                                 marker=dict(size=8, color="grey", symbol="x")), row=1, col=1)
 
         # Add ellipses depicting the covariances of the fitted Gaussians
         for i in range(len(lda.mu_)):
             fig.add_trace(get_ellipse(lda.mu_[i], lda.cov_), row=1, col=2)
+            fig.add_trace(get_ellipse(gaussian_nb.mu_[i], np.diag(gaussian_nb.vars_[i])), row=1, col=1)
 
         fig.update_layout(title_text="Subplots using {0} dataset".format(f))
         fig.show()
@@ -136,5 +146,5 @@ def compare_gaussian_classifiers():
 
 if __name__ == '__main__':
     np.random.seed(0)
-    run_perceptron()
+    #run_perceptron()
     compare_gaussian_classifiers()

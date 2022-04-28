@@ -113,19 +113,6 @@ class LDA(BaseEstimator):
                 likelihoods[j][i] = log_pi_k + X[j] @ self._cov_inv @ self.mu_[i] - mu_k
         return likelihoods
 
-        # sum_on_k = 0
-        # for i, k in enumerate(self.classes_):
-        #     sum_on_k += self._counted_classes[i] * np.log(self.pi_[i])
-        #     sum_on_m = 0
-        #     for j in range(len(self.classes_)):
-        #         x_sub_mu = X[j] - self.mu_[self.classes_ == y[j]]
-        #         sum_on_m += x_sub_mu @ self._cov_inv @ x_sub_mu.T
-        #     sum_on_k -= 0.5 * ()
-        #
-        # part_2 = 0.5 * n_samples * n_features * np.log(2 * np.pi)
-        # part_3 = 0.5 * n_samples * np.log(det(self.cov_))
-        # return sum_on_k - part_2 - part_3
-
     def _loss(self, X: np.ndarray, y: np.ndarray) -> float:
         """
         Evaluate performance under misclassification loss function
