@@ -41,11 +41,10 @@ class DecisionStump(BaseEstimator):
             Responses of input data to fit to
         """
         err_list = []
-        labels = np.unique(y)
-        for label in labels:
+        for sign in [-1, 1]:
             for i, feature in enumerate(X.T):
-                thr, thr_err = self._find_threshold(feature, y, label)
-                err_list.append([i, thr, thr_err, label])
+                thr, thr_err = self._find_threshold(feature, y, sign)
+                err_list.append([i, thr, thr_err, sign])
         self.j_, self.threshold_, _, self.sign_ = min(err_list, key=lambda t: t[2])
 
     def _predict(self, X: np.ndarray) -> np.ndarray:
@@ -69,6 +68,11 @@ class DecisionStump(BaseEstimator):
         """
         feature = X[:, self.j_]
         return np.where(feature >= self.threshold_, self.sign_, -self.sign_)
+
+    @staticmethod
+    def _weighted_misclassification_error(y_true: np.ndarray, y_pred: np.ndarray):
+        sum_mistakes = np.sum(np.abs(y_true * (np.sign(y_true) != y_pred)))
+        return sum_mistakes / len(y_true)
 
     def _find_threshold(self, values: np.ndarray, labels: np.ndarray, sign: int) -> Tuple[float, float]:
         """
@@ -102,10 +106,10 @@ class DecisionStump(BaseEstimator):
         """
         sorted_values = np.sort(values)
         err_list = []
-        for value in sorted_values:
-            pred_labels = np.where(sorted_values >= value, sign, -sign)
-            err = misclassification_error(labels, pred_labels)
-            err_list.append((err, value))
+        for thr_value in sorted_values:
+            pred_labels = np.where(values >= thr_value, sign, -sign)
+            err = self._weighted_misclassification_error(labels, pred_labels)
+            err_list.append((thr_value, err))
         return min(err_list, key=lambda t: t[1])
 
     def _loss(self, X: np.ndarray, y: np.ndarray) -> float:
