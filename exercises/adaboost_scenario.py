@@ -62,8 +62,24 @@ def fit_and_evaluate_adaboost(noise, n_learners=250, train_size=5000, test_size=
 
     # Question 2: Plotting decision surfaces
     T = [5, 50, 100, 250]
+    symbols = np.array(["circle", "x"])
     lims = np.array([np.r_[train_X, test_X].min(axis=0), np.r_[train_X, test_X].max(axis=0)]).T + np.array([-.1, .1])
-    # raise NotImplementedError()
+    test_y_shapes = (test_y == 1).astype(int)
+    fig = make_subplots(rows=2, cols=2, subplot_titles=[rf"$\textbf{{T={t}}}$" for t in T],
+                        horizontal_spacing=0.01, vertical_spacing=.03)
+    for i, t in enumerate(T):
+        fig.add_traces([
+            decision_surface(lambda x: adaboost_model.partial_predict(x, T=t),
+                             lims[0], lims[1], showscale=False),
+            go.Scatter(
+                x=train_X[:, 0], y=train_X[:, 1], mode="markers", showlegend=False,
+                marker=dict(
+                    color=train_y, symbol=symbols[test_y_shapes], colorscale=[custom[0], custom[-1]],
+                    line=dict(color="black", width=1)))],
+            rows=(i // 2) + 1, cols=(i % 2) + 1)
+    fig.update_layout(title=rf"$\textbf{{Decision boundary for ensemble up to iteration T}}$", margin=dict(t=100)) \
+        .update_xaxes(visible=False).update_yaxes(visible=False)
+    fig.show()
 
     # Question 3: Decision surface of best performing ensemble
     # raise NotImplementedError()
