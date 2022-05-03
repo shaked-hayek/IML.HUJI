@@ -119,7 +119,11 @@ class AdaBoost(BaseEstimator):
         responses : ndarray of shape (n_samples, )
             Predicted responses of given samples
         """
-        return self.models_[T - 1].predict(X)
+        sum_p = 0
+        for i in range(T):
+            sum_p += self.models_[i].predict(X) * self.weights_[i]
+        return np.sign(sum_p)
+
 
     def partial_loss(self, X: np.ndarray, y: np.ndarray, T: int) -> float:
         """
