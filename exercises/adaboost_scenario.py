@@ -2,6 +2,7 @@ import numpy as np
 from typing import Tuple
 from IMLearn.metalearners.adaboost import AdaBoost
 from IMLearn.learners.classifiers import DecisionStump
+from IMLearn.metrics.loss_functions import accuracy
 from utils import *
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
@@ -62,19 +63,23 @@ def fit_and_evaluate_adaboost(noise, n_learners=250, train_size=5000, test_size=
 
     # Question 2: Plotting decision surfaces
     T = [5, 50, 100, 250]
-    symbols = np.array(["circle", "x"])
+    symbols = np.array(["x", "circle"])
     lims = np.array([np.r_[train_X, test_X].min(axis=0), np.r_[train_X, test_X].max(axis=0)]).T + np.array([-.1, .1])
-    test_y_shapes = (test_y == 1).astype(int)
+    X = np.concatenate((train_X, test_X), axis=0)
+    y = np.concatenate((train_y, test_y), axis=0)
+    y_shapes = np.concatenate((np.ones(train_size), np.zeros(test_size))).astype(int)
     fig = make_subplots(rows=2, cols=2, subplot_titles=[rf"$\textbf{{T={t}}}$" for t in T],
                         horizontal_spacing=0.01, vertical_spacing=.03)
+
     for i, t in enumerate(T):
         fig.add_traces([
-            decision_surface(lambda x: adaboost_model.partial_predict(x, T=t),
-                             lims[0], lims[1], showscale=False),
+            decision_surface(lambda x: adaboost_model.partial_predict(x, T=t), lims[0], lims[1], showscale=False),
             go.Scatter(
-                x=train_X[:, 0], y=train_X[:, 1], mode="markers", showlegend=False,
+                x=X[:, 0], y=X[:, 1], mode="markers", showlegend=False,
                 marker=dict(
-                    color=train_y, symbol=symbols[test_y_shapes], colorscale=[custom[0], custom[-1]],
+                    color=y,
+                    symbol=symbols[y_shapes],
+                    colorscale=[custom[0], custom[-1]],
                     line=dict(color="black", width=1)))],
             rows=(i // 2) + 1, cols=(i % 2) + 1)
     fig.update_layout(title=rf"$\textbf{{Decision boundary for ensemble up to iteration T}}$", margin=dict(t=100)) \
@@ -82,12 +87,32 @@ def fit_and_evaluate_adaboost(noise, n_learners=250, train_size=5000, test_size=
     fig.show()
 
     # Question 3: Decision surface of best performing ensemble
-    # raise NotImplementedError()
+    size_lowest_test_error = int(np.argmin(test_errors))
+    # lowest_test_error = test_errors[size_lowest_test_error]
+    pred_test_y = adaboost_model.partial_predict(test_X, T=size_lowest_test_error)
+    test_accuracy = accuracy(test_y, pred_test_y)
+
+    go.Figure([
+        decision_surface(lambda x: adaboost_model.partial_predict(x, T=size_lowest_test_error), lims[0], lims[1]),
+        go.Scatter(x=test_X[:, 0], y=test_X[:, 1], mode='markers',
+                   marker=dict(color=test_y, colorscale=custom), showlegend=False)
+    ], layout=go.Layout(
+        title="Ensemble size with lowest test error - {0}, Accuracy - {1}".format(
+            size_lowest_test_error, test_accuracy
+        )
+    )).show()
 
     # Question 4: Decision surface with weighted samples
-    # raise NotImplementedError()
+    weights = adaboost_model.D_ / np.max(adaboost_model.D_) * 5
+
+    go.Figure([
+        decision_surface(adaboost_model.predict, lims[0], lims[1]),
+        go.Scatter(x=train_X[:, 0], y=train_X[:, 1], mode='markers',
+                   marker=dict(color=train_y, colorscale=custom), marker_size=weights, showlegend=False)
+    ], layout=go.Layout(title="")).show()
 
 
 if __name__ == '__main__':
     np.random.seed(0)
     fit_and_evaluate_adaboost(0)
+    #fit_and_evaluate_adaboost(0.4)
