@@ -105,8 +105,9 @@ class DecisionStump(BaseEstimator):
         which equal to or above the threshold are predicted as `sign`
         """
         sorted_values = np.sort(values)
+        sorted_values_and_limits = np.concatenate((sorted_values, [sorted_values[-1] + 1]))
         err_list = []
-        for thr_value in sorted_values:
+        for thr_value in sorted_values_and_limits:
             pred_labels = np.where(values >= thr_value, sign, -sign)
             err = self._weighted_misclassification_error(labels, pred_labels)
             err_list.append((thr_value, err))
