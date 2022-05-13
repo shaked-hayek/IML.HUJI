@@ -63,11 +63,7 @@ def fit_and_evaluate_adaboost(noise, n_learners=250, train_size=5000, test_size=
 
     # Question 2: Plotting decision surfaces
     T = [5, 50, 100, 250]
-    symbols = np.array(["x", "circle"])
     lims = np.array([np.r_[train_X, test_X].min(axis=0), np.r_[train_X, test_X].max(axis=0)]).T + np.array([-.1, .1])
-    X = np.concatenate((train_X, test_X), axis=0)
-    y = np.concatenate((train_y, test_y), axis=0)
-    y_shapes = np.concatenate((np.ones(train_size), np.zeros(test_size))).astype(int)
     fig = make_subplots(rows=2, cols=2, subplot_titles=[rf"$\textbf{{T={t}}}$" for t in T],
                         horizontal_spacing=0.01, vertical_spacing=.03)
 
@@ -75,10 +71,9 @@ def fit_and_evaluate_adaboost(noise, n_learners=250, train_size=5000, test_size=
         fig.add_traces([
             decision_surface(lambda x: adaboost_model.partial_predict(x, T=t), lims[0], lims[1], showscale=False),
             go.Scatter(
-                x=X[:, 0], y=X[:, 1], mode="markers", showlegend=False,
+                x=test_X[:, 0], y=test_X[:, 1], mode="markers", showlegend=False,
                 marker=dict(
-                    color=y,
-                    symbol=symbols[y_shapes],
+                    color=test_y,
                     colorscale=[custom[0], custom[-1]],
                     line=dict(color="black", width=1)))],
             rows=(i // 2) + 1, cols=(i % 2) + 1)
@@ -103,16 +98,16 @@ def fit_and_evaluate_adaboost(noise, n_learners=250, train_size=5000, test_size=
     )).show()
 
     # Question 4: Decision surface with weighted samples
-    weights = adaboost_model.D_ / np.max(adaboost_model.D_) * 5
+    weights = (adaboost_model.D_ / np.max(adaboost_model.D_)) * 10
 
     go.Figure([
         decision_surface(adaboost_model.predict, lims[0], lims[1]),
         go.Scatter(x=train_X[:, 0], y=train_X[:, 1], mode='markers',
                    marker=dict(color=train_y, colorscale=custom), marker_size=weights, showlegend=False)
-    ], layout=go.Layout(title="")).show()
+    ], layout=go.Layout(title="Decision surface with weighted samples")).show()
 
 
 if __name__ == '__main__':
     np.random.seed(0)
     fit_and_evaluate_adaboost(0)
-    #fit_and_evaluate_adaboost(0.4)
+    fit_and_evaluate_adaboost(0.4)
