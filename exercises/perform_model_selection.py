@@ -53,17 +53,17 @@ def select_polynomial_degree(n_samples: int = 100, noise: float = 5):
     y_noise = y + np.random.normal(0, scale=noise, size=len(y))
     train_X, train_y, test_X, test_y = split_and_get_array(X, y_noise, train_proportion=TRAIN_PROPORTION)
 
-    # go.Figure([
-    #         go.Scatter(x=X, y=y, mode="markers+lines", name="Real Points",
-    #                    marker=dict(color="black", opacity=.7)),
-    #         go.Scatter(x=train_X, y=train_y, mode="markers+lines", name="Train Points",
-    #                    marker=dict(color="red", opacity=.7)),
-    #         go.Scatter(x=test_X, y=test_y, mode="markers+lines", name="Test Points",
-    #                    marker=dict(color="blue", opacity=.7))
-    # ], layout=go.Layout(
-    #         title={"text": "True, Train and Test Data"},
-    #         xaxis={"title": r"$x$"},
-    #         yaxis={"title": r"$y$"})).show()
+    go.Figure([
+            go.Scatter(x=X, y=y, mode="markers+lines", name="Real Points",
+                       marker=dict(color="black", opacity=.9)),
+            go.Scatter(x=train_X, y=train_y, mode="markers+lines", name="Train Points",
+                       marker=dict(color="red", opacity=.9)),
+            go.Scatter(x=test_X, y=test_y, mode="markers+lines", name="Test Points",
+                       marker=dict(color="blue", opacity=.9))
+    ], layout=go.Layout(
+            title={"text": "True, Train and Test Data for {0} samples and noise={1}".format(n_samples, noise)},
+            xaxis={"title": r"$x$"},
+            yaxis={"title": r"$y$"})).show()
 
     # Question 2 - Perform CV for polynomial fitting with degrees 0,1,...,10
     avg_scores = []
@@ -78,7 +78,7 @@ def select_polynomial_degree(n_samples: int = 100, noise: float = 5):
         go.Scatter(x=list(range(K_MIN, K_MAM)), y=avg_scores_nd[:, 1], mode="markers+lines", name="Average Validation Scores",
                    marker=dict(color="red", opacity=.7)),
     ], layout=go.Layout(
-        title={"text": "Average Train and Validation Scores"},
+        title={"text": "Average Train and Validation Scores for {0} samples and noise={1}".format(n_samples, noise)},
         xaxis={"title": "k"},
         yaxis={"title": r"score"})).show()
 
@@ -120,4 +120,6 @@ def select_regularization_parameter(n_samples: int = 50, n_evaluations: int = 50
 if __name__ == '__main__':
     np.random.seed(0)
     select_polynomial_degree()
+    # select_polynomial_degree(noise=0)
+    # select_polynomial_degree(n_samples=1500, noise=10)
     # select_regularization_parameter()
