@@ -5,20 +5,10 @@ import numpy as np
 from IMLearn import BaseEstimator
 
 
-def split_xy(s):
-    return s[:, :-1], s[:, -1]
-
-
-def split_k_folds(X: np.ndarray, y: np.ndarray, k: int):
-    S = np.c_[X, y]
-    return np.array_split(S, k, axis=0)
-
-
-def get_train_test(folds, i):
-    c_folds = deepcopy(folds)
-    test_X, test_y = split_xy(c_folds.pop(i))
-    train_X, train_y = split_xy(np.concatenate(c_folds))
-    return train_X.reshape((train_X.shape[0],)), train_y, test_X.reshape((test_X.shape[0],)), test_y
+def get_train_test(folds_X, folds_y, i):
+    return np.concatenate(np.delete(folds_X, i, 0), axis=0), \
+           np.concatenate(np.delete(folds_y, i, 0), axis=0), \
+           folds_X[i], folds_y[i]
 
 
 def cross_validate(estimator: BaseEstimator, X: np.ndarray, y: np.ndarray,
@@ -53,14 +43,15 @@ def cross_validate(estimator: BaseEstimator, X: np.ndarray, y: np.ndarray,
     validation_score: float
         Average validation score over folds
     """
-    folds = split_k_folds(X, y, cv)
+    folds_X = np.array_split(X, cv, axis=0)
+    folds_y = np.array_split(y, cv, axis=0)
     train_scores = []
     validation_scores = []
     for i in range(cv):
-        train_X, train_y, test_X, test_y = get_train_test(folds, i)
+        train_X, train_y, test_X, test_y = get_train_test(folds_X, folds_y, i)
         estimator.fit(train_X, train_y)
-        pred_y = estimator.predict(test_X)
         train_pred_y = estimator.predict(train_X)
+        pred_y = estimator.predict(test_X)
         train_scores.append(scoring(train_y, train_pred_y))
         validation_scores.append(scoring(test_y, pred_y))
     return np.average(train_scores), np.average(validation_scores)
