@@ -1,16 +1,13 @@
 from __future__ import annotations
-import numpy as np
-import pandas as pd
 from sklearn import datasets
 from IMLearn.metrics import mean_square_error
 from IMLearn.utils import split_train_test
 from IMLearn.model_selection import cross_validate
-from IMLearn.learners.regressors import PolynomialFitting, LinearRegression, RidgeRegression
+from IMLearn.learners.regressors import PolynomialFitting, RidgeRegression
 from sklearn.linear_model import Lasso
 
 from utils import *
 import plotly.graph_objects as go
-from plotly.subplots import make_subplots
 
 
 TRAIN_PROPORTION = 2 / 3
@@ -44,11 +41,17 @@ def plot_k_folds_result(avg_scores, x_range, plot_title, x_title):
         yaxis={"title": r"score"})).show()
 
 
-def report_best_param(avg_scores, param_name, model=""):
+def report_errors(avg_scores, param_range, model, train_X, train_y, test_X, test_y, param_name, model_name=""):
     avg_validation_scores = avg_scores[:, 1]
-    best_param = int(np.argmin(avg_validation_scores))
-    print("The {0} that minimizes the validation score{1}: {2}".format(param_name, model, best_param))
-    return best_param
+    best_param_i = int(np.argmin(avg_validation_scores))
+    best_param = param_range[best_param_i]
+    print("The {0} that minimizes the validation score{1}: {2}".format(param_name, model_name, best_param))
+
+    best_model = model(best_param)
+    best_model.fit(train_X, train_y)
+    pred_y = best_model.predict(test_X)
+    print("The test error of the fitted model: {0:.2f}".format(mean_square_error(test_y, pred_y)))
+    print("The validation error previously achieved with this param: {0:.2f}\n".format(avg_scores[:, 1][best_param_i]))
 
 
 def select_polynomial_degree(n_samples: int = 100, noise: float = 5):
@@ -93,13 +96,7 @@ def select_polynomial_degree(n_samples: int = 100, noise: float = 5):
                         plot_title="Average Train and Validation Scores for {0} samples and noise={1}".format(n_samples, noise))
 
     # Question 3 - Using best value of k, fit a k-degree polynomial model and report test error
-    best_k = report_best_param(avg_scores_nd, "k")
-
-    best_poly_fit = PolynomialFitting(best_k)
-    best_poly_fit.fit(train_X, train_y)
-    pred_y = best_poly_fit.predict(test_X)
-    print("The test error of the fitted model: {0}".format(mean_square_error(test_y, pred_y)))
-    print("The validation error previously achieved with this k: {0}".format(avg_scores[:, 1][best_k]))
+    report_errors(avg_scores_nd, range(K_MIN, K_MAM), PolynomialFitting, train_X, train_y, test_X, test_y, "k")
 
 
 def select_regularization_parameter(n_train: int = 50, n_evaluations: int = 500):
@@ -122,33 +119,38 @@ def select_regularization_parameter(n_train: int = 50, n_evaluations: int = 500)
 
 
     # Question 7 - Perform CV for different values of the regularization parameter for Ridge and Lasso regressions
-    reg_param_options = np.linspace(0, 2, n_evaluations)
+    lasso_param_options = np.linspace(0, 2, n_evaluations)
     avg_scores_lasso = []
-    avg_scores_ridge = []
-    for reg in reg_param_options:
+    for reg in lasso_param_options:
         lasso_model = Lasso(alpha=reg)
-        # ridge_model = RidgeRegression(lam=reg)
         avg_scores_lasso.append(cross_validate(lasso_model, train_X.to_numpy(), train_y.to_numpy(),
                                                mean_square_error, cv=5))
-        # avg_scores_ridge.append(cross_validate(ridge_model, train_X.to_numpy(), train_y.to_numpy(),
-        #                                        mean_square_error, cv=5))
-
     avg_scores_lasso = np.array(avg_scores_lasso)
-    # avg_scores_ridge = np.array(avg_scores_ridge)
 
-    plot_k_folds_result(avg_scores_lasso, reg_param_options, x_title="regression param",
+    ridge_param_options = np.linspace(0, 20, n_evaluations)
+    avg_scores_ridge = []
+    for reg in ridge_param_options:
+        ridge_model = RidgeRegression(lam=reg)
+        avg_scores_ridge.append(cross_validate(ridge_model, train_X.to_numpy(), train_y.to_numpy(),
+                                               mean_square_error, cv=5))
+    avg_scores_ridge = np.array(avg_scores_ridge)
+
+    plot_k_folds_result(avg_scores_lasso, lasso_param_options, x_title="regression param",
                         plot_title="Average Train and Validation Scores for {0} model".format("Lasso"))
-    # plot_k_folds_result(avg_scores_ridge, reg_param_options, x_title="regression param",
-    #                     plot_title="Average Train and Validation Scores for {0} model".format("Ridge"))
+    plot_k_folds_result(avg_scores_ridge, ridge_param_options, x_title="regression param",
+                        plot_title="Average Train and Validation Scores for {0} model".format("Ridge"))
 
     # Question 8 - Compare best Ridge model, best Lasso model and Least Squares model
-    best_reg_param_lasso = report_best_param(avg_scores_lasso, "regression param", " of Lasso")
-    # best_reg_param_lasso = report_best_param(avg_scores_ridge, "regression param", " of Ridge")
+    report_errors(avg_scores_lasso, lasso_param_options, Lasso,
+                  train_X, train_y, test_X, test_y, "regression param", " of Lasso")
+
+    report_errors(avg_scores_ridge, ridge_param_options, RidgeRegression,
+                  train_X, train_y, test_X, test_y, "regression param", " of Ridge")
 
 
 if __name__ == '__main__':
     np.random.seed(0)
     select_polynomial_degree()
-    # select_polynomial_degree(noise=0)
-    # select_polynomial_degree(n_samples=1500, noise=10)
-    # select_regularization_parameter()
+    select_polynomial_degree(noise=0)
+    select_polynomial_degree(n_samples=1500, noise=10)
+    select_regularization_parameter()

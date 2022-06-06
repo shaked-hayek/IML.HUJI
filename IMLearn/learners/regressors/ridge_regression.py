@@ -2,6 +2,7 @@ from __future__ import annotations
 from typing import NoReturn
 from ...base import BaseEstimator
 import numpy as np
+from ...metrics.loss_functions import mean_square_error
 
 
 class RidgeRegression(BaseEstimator):
@@ -43,6 +44,11 @@ class RidgeRegression(BaseEstimator):
         self.include_intercept_ = include_intercept
         self.lam_ = lam
 
+    def _add_intercept(self, X: np.ndarray):
+        if self.include_intercept_:
+            return np.c_[np.ones(X.shape[0]), X]
+        return X
+
     def _fit(self, X: np.ndarray, y: np.ndarray) -> NoReturn:
         """
         Fit Ridge regression model to given samples
@@ -59,7 +65,17 @@ class RidgeRegression(BaseEstimator):
         -----
         Fits model with or without an intercept depending on value of `self.include_intercept_`
         """
-        raise NotImplementedError()
+        X = self._add_intercept(X)
+        # U, S, V = np.linalg.svd(X, full_matrices=False)
+        # S_trans = np.transpose(S)
+        # S_lambda = np.linalg.inv((S_trans @ S) + self.lam_ * np.identity(S.shape[0])) @ S_trans
+        # self.coefs_ = V @ S_lambda @ np.transpose(U)
+
+        d = X.shape[1]
+        lam_identity = np.sqrt(self.lam_) * np.identity(d)
+        X_lam = np.concatenate((X, lam_identity), axis=0)
+        y_lam = np.concatenate((y, np.zeros(d)), axis=0)
+        self.coefs_ = np.matmul(np.linalg.pinv(X_lam), y_lam)
 
     def _predict(self, X: np.ndarray) -> np.ndarray:
         """
@@ -75,7 +91,8 @@ class RidgeRegression(BaseEstimator):
         responses : ndarray of shape (n_samples, )
             Predicted responses of given samples
         """
-        raise NotImplementedError()
+        X = self._add_intercept(X)
+        return np.matmul(X, self.coefs_)
 
     def _loss(self, X: np.ndarray, y: np.ndarray) -> float:
         """
@@ -94,4 +111,5 @@ class RidgeRegression(BaseEstimator):
         loss : float
             Performance under MSE loss function
         """
-        raise NotImplementedError()
+        y_pred = self._predict(X)
+        return mean_square_error(y, y_pred)
