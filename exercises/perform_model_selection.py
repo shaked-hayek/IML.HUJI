@@ -3,7 +3,7 @@ from sklearn import datasets
 from IMLearn.metrics import mean_square_error
 from IMLearn.utils import split_train_test
 from IMLearn.model_selection import cross_validate
-from IMLearn.learners.regressors import PolynomialFitting, RidgeRegression
+from IMLearn.learners.regressors import PolynomialFitting, LinearRegression, RidgeRegression
 from sklearn.linear_model import Lasso
 
 from utils import *
@@ -146,6 +146,11 @@ def select_regularization_parameter(n_train: int = 50, n_evaluations: int = 500)
 
     report_errors(avg_scores_ridge, ridge_param_options, RidgeRegression,
                   train_X, train_y, test_X, test_y, "regression param", " of Ridge")
+
+    lin_reg = LinearRegression()
+    lin_reg.fit(train_X, train_y)
+    pred_y = lin_reg.predict(test_X)
+    print("The test error of the fitted model: {0:.2f}".format(mean_square_error(test_y, pred_y)))
 
 
 if __name__ == '__main__':
